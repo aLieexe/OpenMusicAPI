@@ -35,7 +35,26 @@ class AlbumsService {
 
   async getAlbumById({ id }){
     const query = {
-      text: 'SELECT * FROM albums WHERE id = $1',
+      text: `
+        SELECT
+          a.id,
+          a.name,
+          a.year,
+          COALESCE
+          (
+            array_agg(
+              jsonb_build_object(
+                'id', s.id,
+                'title', s.title,
+                'performer', s.performer
+              )
+            ) FILTER (WHERE s.id IS NOT NULL), ARRAY[]::jsonb[]
+          ) AS songs
+        FROM albums a
+        LEFT JOIN songs s ON s."albumId" = a.id
+        WHERE a.id = $1
+        GROUP BY a.id, a.name, a.year
+      `,
       values: [id]
     };
 

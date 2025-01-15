@@ -8,5 +8,4 @@ class InvariantError extends ClientError{
   }
 }
 
-
 module.exports = InvariantError;

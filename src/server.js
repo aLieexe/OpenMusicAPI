@@ -1,6 +1,7 @@
 const Hapi = require('@hapi/hapi');
 const ClientError = require('./exceptions/ClientError.js');
-
+const dotenv = require('dotenv');
+dotenv.config();
 
 const albums = require('./api/albums/index.js');
 const AlbumsService = require('./services/postgres/AlbumsService.js');
