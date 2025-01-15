@@ -1,8 +1,14 @@
 const Hapi = require('@hapi/hapi');
 const ClientError = require('./exceptions/ClientError.js');
+
+
 const albums = require('./api/albums/index.js');
 const AlbumsService = require('./services/postgres/AlbumsService.js');
 const AlbumsValidator = require('./validator/albums/index.js');
+
+const songs = require('./api/songs/index.js');
+const SongsService = require('./services/postgres/SongsService.js');
+const SongsValidator = require('./validator/songs/index.js');
 
 
 const init = async () => {
@@ -23,6 +29,13 @@ const init = async () => {
       options: {
         service: new AlbumsService(),
         validator: AlbumsValidator
+      }
+    },
+    {
+      plugin: songs,
+      options: {
+        service: new SongsService(),
+        validator: SongsValidator
       }
     },
   ]);

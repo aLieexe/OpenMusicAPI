@@ -18,6 +18,7 @@ class AlbumsService {
   async addAlbums({ name, year }){
     const id = `album-${  nanoid(16)}`;
 
+    //this works?
     const query = {
       text: 'INSERT INTO albums (id, name, year) VALUES ($1, $2, $3) RETURNING id',
       values: [id, name, year]
@@ -54,8 +55,6 @@ class AlbumsService {
       values: [id, name, year]
     };
 
-    console.log(id);
-
     const result = await this._pool.query(query);
 
 
@@ -70,11 +69,9 @@ class AlbumsService {
       text: 'DELETE FROM albums WHERE id = $1 RETURNING id',
       values: [id]
     };
-    console.log(id);
 
     const result = await this._pool.query(query);
 
-    console.log(result);
 
     if (!result.rows.length) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');

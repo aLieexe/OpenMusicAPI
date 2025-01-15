@@ -51,15 +51,14 @@ exports.up = (pgm) => {
     },
     albumId: {
       type: 'VARCHAR(22)',
-      notNull: true,
       references: 'albums(id)',
       onDelete: 'SET NULL'
     },
   });
 
-  pgm.addConstraint('songs', 'check_duration', {
-    check: 'duration >= 0'
-  });
+  // pgm.addConstraint('songs', 'check_duration', {
+  //   check: 'duration >= 0'
+  // });
 };
 
 /**
