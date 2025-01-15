@@ -9,4 +9,4 @@ class NotFoundError extends ClientError{
   }
 }
 
-exports.module = NotFoundError;
+module.exports = NotFoundError;

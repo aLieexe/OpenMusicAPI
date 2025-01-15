@@ -9,4 +9,4 @@ class InvariantError extends ClientError{
 }
 
 
-exports.module = InvariantError;
+module.exports = InvariantError;
