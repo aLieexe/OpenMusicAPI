@@ -1,7 +1,6 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-exports.shorthands = undefined;
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -9,21 +8,6 @@ exports.shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable('albums', {
-    id: {
-      type: 'VARCHAR(22)',
-      primaryKey: true
-    },
-    name: {
-      type: 'TEXT',
-      notNull: true
-    },
-    year: {
-      type: 'SMALLINT',
-      notNull: true
-    }
-  });
-
   pgm.createTable('songs', {
     id: {
       type: 'VARCHAR(22)',
@@ -55,10 +39,6 @@ exports.up = (pgm) => {
       onDelete: 'SET NULL'
     },
   });
-
-  // pgm.addConstraint('songs', 'check_duration', {
-  //   check: 'duration >= 0'
-  // });
 };
 
 /**
@@ -68,6 +48,4 @@ exports.up = (pgm) => {
  */
 exports.down = (pgm) => {
   pgm.dropTable('songs');
-  pgm.dropTable('albums');
 };
-
