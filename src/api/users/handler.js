@@ -11,8 +11,6 @@ class UserHandler{
 
     const userId = await this._service.addUser({ username, password, fullname });
 
-
-
     const response = h.response({
       status: 'success',
       message: 'User berhasil ditambahkan',

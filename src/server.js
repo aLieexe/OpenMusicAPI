@@ -15,11 +15,18 @@ const users = require('./api/users/index.js');
 const UsersService = require('./services/postgres/UsersService.js');
 const UsersValidator = require('./validator/users/index.js');
 
+const authentications = require('./api/authentications/index.js');
+const TokenManager = require('./tokenize/TokenManager.js');
+const AuthenticationsService = require('./services/postgres/AuthenticationsService.js');
+const AuthenticationsValidator = require('./validator/authentications/index.js');
+
+
 const ClientError = require('./exceptions/ClientError.js');
 
 
 
 const init = async () => {
+  const usersService = new UsersService();
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -33,8 +40,24 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
-    }
+    },
   ]);
+
+  server.auth.strategy('openmusic_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
+  });
 
 
   await server.register([
@@ -55,10 +78,20 @@ const init = async () => {
     {
       plugin: users,
       options: {
-        service: new UsersService(),
+        service: usersService,
         validator: UsersValidator
       }
     },
+    {
+      plugin: authentications,
+      options: {
+        authenticationsService: new AuthenticationsService(),
+        usersService: usersService,
+        tokenManager: TokenManager,
+        validator: AuthenticationsValidator
+      }
+    },
+
   ]);
 
   server.ext('onPreResponse', (request, h) => {
