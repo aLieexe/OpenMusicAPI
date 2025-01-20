@@ -8,6 +8,8 @@
     "dev": "NODE_ENV=development node --watch --env-file=.env src/server.js",
     "start": "NODE_ENV=production node --env-file=.env src/server.js",
     "test": "newman run test/v2/OpenMusicAPIV2Test.postman_collection.json -e test/v2/OpenMusicAPITest.postman_environment.json",
+    "test:folder": "newman run test/v2/OpenMusicAPIV2Test.postman_collection.json -e test/v2/OpenMusicAPITest.postman_environment.json --folder",
+    "reset": "npm run migrate down --count 10 && npm run migrate up",
     "migrate": "node-pg-migrate"
   },
   "keywords": [],
