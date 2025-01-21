@@ -8,11 +8,11 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable('playlists_songs', {
+  pgm.createTable('collaborations', {
     id: {
       type: 'VARCHAR(50)',
-      primaryKey: true,
-      notNull: true
+      notNull: true,
+      primaryKey: true
     },
     playlistId: {
       type: 'VARCHAR(50)',
@@ -20,12 +20,13 @@ exports.up = (pgm) => {
       references: 'playlists(id)',
       onDelete: 'CASCADE'
     },
-    songId: {
+    userId: {
       type: 'VARCHAR(50)',
       notNull: true,
-      references: 'songs(id)',
+      references: 'users(id)',
       onDelete: 'CASCADE'
-    }
+    },
+
   });
 };
 
@@ -35,5 +36,5 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropTable('playlists_songs');
+  pgm.dropTable('collaborations');
 };

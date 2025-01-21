@@ -4,6 +4,7 @@ const InvariantError = require('../../exceptions/InvariantError');
 
 const bcrypt = require('bcrypt');
 const AuthenticationError = require('../../exceptions/AuthenticationError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 class UsersService{
   constructor(){
     this._pool = new Pool();
@@ -64,6 +65,20 @@ class UsersService{
     }
 
     return id;
+  }
+
+
+  async getUserById(userId){
+    const query = {
+      text: 'SELECT * FROM users where id = $1',
+      values: [userId]
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount){
+      throw new NotFoundError('User tidak ditemukan');
+    }
   }
 }
 

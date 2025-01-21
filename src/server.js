@@ -25,13 +25,24 @@ const PlaylistsService = require('./services/postgres/PlaylistsService.js');
 const PlaylistsValidator = require('./validator/playlists/index.js');
 
 
+const collaborations = require('./api/collaborations/index.js');
+const CollaborationsService = require('./services/postgres/CollaborationsService.js');
+const collaborationsValidator = require('./validator/collaborations/index.js');
+
 const ClientError = require('./exceptions/ClientError.js');
 
 
 
 const init = async () => {
+  const albumsService = new AlbumsService();
   const usersService = new UsersService();
   const songsService = new SongsService();
+  const collaborationsService = new CollaborationsService();
+  const playlistsService = new PlaylistsService(collaborationsService);
+  const authenticationsService = new AuthenticationsService();
+
+
+
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -69,7 +80,7 @@ const init = async () => {
     {
       plugin: albums,
       options: {
-        service: new AlbumsService(),
+        service: albumsService,
         validator: AlbumsValidator
       }
     },
@@ -90,7 +101,7 @@ const init = async () => {
     {
       plugin: authentications,
       options: {
-        authenticationsService: new AuthenticationsService(),
+        authenticationsService: authenticationsService,
         usersService: usersService,
         tokenManager: TokenManager,
         validator: AuthenticationsValidator
@@ -99,13 +110,20 @@ const init = async () => {
     {
       plugin: playlist,
       options: {
-        playlistsService: new PlaylistsService(),
+        playlistsService: playlistsService,
         songsService: songsService,
         validator: PlaylistsValidator
       }
     },
-
-
+    {
+      plugin: collaborations,
+      options: {
+        collaborationsService: collaborationsService,
+        playlistsService: playlistsService,
+        usersService: usersService,
+        validator: collaborationsValidator
+      }
+    },
   ]);
 
   server.ext('onPreResponse', (request, h) => {
