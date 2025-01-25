@@ -7,9 +7,9 @@
     "format": "eslint . --fix",
     "dev": "NODE_ENV=development node --watch --env-file=.env src/server.js",
     "start": "NODE_ENV=production node --env-file=.env src/server.js",
-    "test": "newman run test/v2/OpenMusicAPIV2Test.postman_collection.json -e test/v2/OpenMusicAPITest.postman_environment.json",
-    "test:folder": "newman run test/v2/OpenMusicAPIV2Test.postman_collection.json -e test/v2/OpenMusicAPITest.postman_environment.json --folder",
-    "reset": "npm run migrate down --count 10 && npm run migrate up",
+    "test": "newman run test/v3/OpenMusicAPIV3Test.postman_collection.json -e test/v3/OpenMusicAPITest.postman_environment.json",
+    "test:folder": "newman run test/v3/OpenMusicAPIV3Test.postman_collection.json -e test/v3/OpenMusicAPITest.postman_environment.json --folder",
+    "reset": "npm run migrate down --count 69 && npm run migrate up",
     "migrate": "node-pg-migrate"
   },
   "keywords": [],
@@ -25,11 +25,13 @@
   "dependencies": {
     "@hapi/hapi": "^21.3.12",
     "@hapi/jwt": "^3.2.0",
+    "amqplib": "^0.10.5",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "joi": "^17.13.3",
     "nanoid": "^3.3.8",
     "node-pg-migrate": "^7.9.0",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
   }
 }
