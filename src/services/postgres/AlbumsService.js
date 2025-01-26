@@ -40,6 +40,7 @@ class AlbumsService {
           a.id,
           a.name,
           a.year,
+          a.cover as "coverUrl",
           COALESCE
           (
             array_agg(
@@ -94,6 +95,19 @@ class AlbumsService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  async addCover(albumId, url){
+    const query = {
+      text: 'UPDATE albums SET cover = $2 WHERE id = $1 RETURNING id',
+      values: [albumId, url]
+    };
+    const result = await this._pool.query(query);
+
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Cover gagal ditambahkan. album tidak ditemukan');
     }
   }
 }

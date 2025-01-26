@@ -8,7 +8,7 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable('user_album_like', {
+  pgm.createTable('user_album_likes', {
     id: {
       type: 'VARCHAR(50)',
       primaryKey: true
@@ -24,6 +24,9 @@ exports.up = (pgm) => {
       onDelete: 'CASCADE'
     }
   });
+
+
+  pgm.addConstraint('user_album_likes', 'unique_userId_albumId', 'UNIQUE("userId", "albumId")');
 };
 
 /**
@@ -32,5 +35,5 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropTable('user_album_like');
+  pgm.dropTable('user_album_likes');
 };

@@ -1,6 +1,8 @@
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const dotenv = require('dotenv');
+const path = require('path');
+const Inert = require('@hapi/inert');
 dotenv.config();
 
 const albums = require('./api/albums/index.js');
@@ -34,7 +36,17 @@ const _exports = require('./api/exports/index.js');
 const ExportsService = require('./services/rabbitmq/ExportsService.js');
 const ExportsValidator = require('./validator/exports/index.js');
 
+
+const uploads = require('./api/uploads/index.js');
+const StorageService = require('./services/storage/StorageService.js');
+const UploadsValidator = require('./validator/uploads/index.js');
+
+const likes = require('./api/likes/index.js');
+const LikesService = require('./services/postgres/LikesService.js');
+
+
 const ClientError = require('./exceptions/ClientError.js');
+const CacheService = require('./services/redis/CacheService.js');
 
 
 
@@ -45,7 +57,10 @@ const init = async () => {
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService(collaborationsService);
   const authenticationsService = new AuthenticationsService();
-
+  console.log(path.resolve(__dirname, 'api/uploads/file/images'));
+  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
+  const likesService = new LikesService();
+  const cacheService = new CacheService();
 
 
   const server = Hapi.server({
@@ -61,6 +76,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -135,6 +153,22 @@ const init = async () => {
         exportsService: ExportsService,
         playlistsService: playlistsService,
         validator: ExportsValidator
+      }
+    },
+    {
+      plugin: uploads,
+      options: {
+        storageService: storageService,
+        albumsService: albumsService,
+        validator: UploadsValidator
+      }
+    },
+    {
+      plugin: likes,
+      options: {
+        likesService: likesService,
+        albumsService: albumsService,
+        cacheService: cacheService
       }
     },
 
