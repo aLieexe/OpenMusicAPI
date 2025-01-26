@@ -2,3 +2,5 @@
 node_modules
 open-music-api.session.sql
 report.html
+
+src/api/uploads/file

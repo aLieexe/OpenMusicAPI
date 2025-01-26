@@ -1,6 +1,7 @@
 class SongsHandler{
-  constructor(service, validator){
-    this._service = service;
+  constructor(songsService, cacheService,  validator){
+    this._songsService = songsService;
+    this._cacheService = cacheService;
     this._validator = validator;
   }
 
@@ -8,38 +9,76 @@ class SongsHandler{
     this._validator.validateSongsPayload(request.payload);
     const { title, year, genre, performer, duration, albumId } = request.payload;
 
-    const songId = await this._service.addSong({ title, year, performer, genre, duration, albumId });
+    const songId = await this._songsService.addSong({ title, year, performer, genre, duration, albumId });
 
     const response = h.response({
       status: 'success',
       data: { songId }
     });
     response.code(201);
+
+    await this._cacheService.delete(`songs:${songId}`);
+    await this._cacheService.delete(`songs${title}${performer}`);
     return response;
   }
 
-  async getSongsHandler(request){
+  async getSongsHandler(request, h){
     const { title, performer } = request.query;
-    const songs = await this._service.getSongs({ title, performer });
-    return {
-      status: 'success',
-      data: {
-        songs,
-      },
-    };
+
+    try {
+      const songs =  JSON.parse(await this._cacheService.get(`songs${title}${performer}`));
+      const response = h.response({
+        status: 'success',
+        data: {
+          songs
+        }
+      });
+      response.header('X-Data-Source', 'cache');
+      response.code(200);
+
+      return response;
+
+    } catch {
+      const songs = await this._songsService.getSongs({ title, performer });
+      await this._cacheService.set(`songs${title}${performer}`, JSON.stringify(songs));
+      return {
+        status: 'success',
+        data: {
+          songs,
+        },
+      };
+
+    }
   }
 
-  async getSongByIdHandler(request){
+  async getSongByIdHandler(request, h){
     const { id } = request.params;
 
-    const song = await this._service.getSongById({ id });
+    try {
+      const song = await JSON.parse(await this._cacheService.get(`songs:${id}`));
+      const response = h.response({
+        status: 'success',
+        data: {
+          song
+        }
+      });
+      response.header('X-Data-Source', 'cache');
+      response.code(200);
 
-    return {
-      status: 'success',
-      data: {
-        song,
-      },
-    };
+      return response;
+
+
+    } catch {
+      const song = await this._songsService.getSongById({ id });
+
+      return {
+        status: 'success',
+        data: {
+          song,
+        },
+      };
+
+    }
   }
 
 
@@ -48,7 +87,11 @@ class SongsHandler{
     const { title, year, genre, performer, duration, albumId } = request.payload;
     const { id } = request.params;
 
-    await this._service.editSongById({ id, title, year, genre, performer, duration, albumId });
+    await this._songsService.editSongById({ id, title, year, genre, performer, duration, albumId });
+    await this._cacheService.delete(`songs:${id}`);
+    await this._cacheService.delete(`songs${title}${performer}`);
+
+
     return {
       status: 'success',
       message: 'Lagu berhasil diedit'
@@ -58,7 +101,11 @@ class SongsHandler{
   async deleteSongByIdHandler(request){
     const { id } = request.params;
 
-    await this._service.deleteSongById({ id });
+    const { title, performer } = await this._songsService.deleteSongById({ id });
+    await this._cacheService.delete(`songs:${id}`);
+    await this._cacheService.delete(`songs${title}${performer}`);
+
+
     return {
       status: 'success',
       message: 'Lagu berhasil dihapus'

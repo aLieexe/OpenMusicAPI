@@ -1,6 +1,7 @@
 class AlbumsHandler{
-  constructor(service, validator){
-    this._service = service;
+  constructor(albumsService, cacheService, validator){
+    this._albumsService = albumsService;
+    this._cacheService = cacheService;
     this._validator = validator;
   }
 
@@ -8,7 +9,8 @@ class AlbumsHandler{
     this._validator.validateAlbumsPayload(request.payload);
     const { name, year } = request.payload;
 
-    const albumId = await this._service.addAlbums({ name, year });
+    const albumId = await this._albumsService.addAlbums({ name, year });
+    await this._cacheService.delete(`album:${albumId}`);
 
     const response = h.response({
       status: 'success',
@@ -18,17 +20,34 @@ class AlbumsHandler{
     return response;
   }
 
-  async getAlbumByIdHandler(request){
+  async getAlbumByIdHandler(request, h){
     const { id } = request.params;
 
-    const album = await this._service.getAlbumById({ id });
+    try {
+      const album = JSON.parse(await this._cacheService.get(`album:${id}`));
+      const response = h.response({
+        status: 'success',
+        data: {
+          album
+        }
+      });
+      response.header('X-Data-Source', 'cache');
+      response.code(200);
 
-    return {
-      status: 'success',
-      data: {
-        album,
-      },
-    };
+
+      return response;
+
+    } catch {
+      const album = await this._albumsService.getAlbumById({ id });
+      await this._cacheService.set(`album-${id}`, JSON.stringify(album));
+      return {
+        status: 'success',
+        data: {
+          album,
+        },
+      };
+
+    }
   }
 
 
@@ -37,7 +56,9 @@ class AlbumsHandler{
     const { name, year } = request.payload;
     const { id } = request.params;
 
-    await this._service.editAlbumById({ id, name, year });
+    await this._albumsService.editAlbumById({ id, name, year });
+    await this._cacheService.delete(`album:${id}`);
+
     return {
       status: 'success',
       message: 'Album berhasil diedit'
@@ -46,8 +67,10 @@ class AlbumsHandler{
 
   async deleteAlbumByIdHandler(request){
     const { id } = request.params;
+    await this._cacheService.delete(`album:${id}`);
 
-    await this._service.deleteAlbumById({ id });
+
+    await this._albumsService.deleteAlbumById({ id });
     return {
       status: 'success',
       message: 'Album berhasil dihapus'

@@ -6,13 +6,7 @@ const { nanoid } = require('nanoid');
 
 class SongsService {
   constructor(){
-    this._pool = new Pool({
-      host: process.env.PGHOST,
-      port: parseInt(process.env.HOST),
-      user: process.env.PGUSER,
-      database: process.env.PGDATABASE,
-      password: process.env.PGPASSWORD,
-    });
+    this._pool = new Pool();
   }
 
   async addSong({ title, year, performer, genre, duration, albumId }){
@@ -83,7 +77,7 @@ class SongsService {
 
   async deleteSongById({ id }){
     const query = {
-      text: 'DELETE FROM songs WHERE id = $1 RETURNING id',
+      text: 'DELETE FROM songs WHERE id = $1 RETURNING id, title, performer',
       values: [id]
     };
 

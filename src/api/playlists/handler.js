@@ -12,7 +12,6 @@ class PlaylistsHandler{
 
     const playlistId = await this._playlistsService.addPlaylist({ name, owner: credentialId });
 
-
     const response = h.response({
       status: 'success',
       data: {
@@ -40,10 +39,7 @@ class PlaylistsHandler{
     const { id: credentialId } = request.auth.credentials;
     const { id: playlistId } = request.params;
 
-
-
     await this._playlistsService.verifyPlaylistOwner(credentialId, playlistId);
-
     await this._playlistsService.deletePlaylistById({ playlistId });
 
     const response = h.response({

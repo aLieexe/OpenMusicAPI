@@ -1,7 +1,8 @@
 class UploadsHandler{
-  constructor(storageService, albumsService, validator){
+  constructor(storageService, albumsService, cacheService, validator){
     this._storageService = storageService;
     this._albumsService = albumsService;
+    this._cacheService = cacheService;
     this._validator = validator;
   }
 
@@ -21,6 +22,8 @@ class UploadsHandler{
       message: 'Sampul berhasil diunggah'
     });
     response.code(201);
+    await this._cacheService.delete(`album:${albumId}`);
+
     return response;
   }
 }
