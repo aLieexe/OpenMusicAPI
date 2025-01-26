@@ -56,7 +56,7 @@ const init = async () => {
   const usersService = new UsersService();
   const songsService = new SongsService();
   const collaborationsService = new CollaborationsService();
-  const playlistsService = new PlaylistsService(collaborationsService);
+  const playlistsService = new PlaylistsService(collaborationsService, cacheService);
   const authenticationsService = new AuthenticationsService();
   console.log(path.resolve(__dirname, 'api/uploads/file/images'));
   const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
@@ -137,6 +137,7 @@ const init = async () => {
       options: {
         playlistsService: playlistsService,
         songsService: songsService,
+        cacheService: cacheService,
         validator: PlaylistsValidator
       }
     },

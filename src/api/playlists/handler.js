@@ -1,7 +1,8 @@
 class PlaylistsHandler{
-  constructor(PlaylistsService, songsService, validator){
+  constructor(PlaylistsService, songsService, cacheService, validator){
     this._playlistsService = PlaylistsService;
     this._songsService = songsService;
+    this._cacheService = cacheService;
     this._validator = validator;
   }
 
@@ -122,17 +123,36 @@ class PlaylistsHandler{
     const { id: credentialId } = request.auth.credentials;
     await this._playlistsService.verifyPlaylistAccess(credentialId, id);
 
-    const activities = await this._playlistsService.getActivities(id);
+    try {
+      const activities = JSON.parse(await this._cacheService.get(`activity:${id}`));
+      const response = h.response({
+        status: 'success',
+        data: {
+          playlistId: id,
+          activities: activities
+        }
+      });
 
-    const response = h.response({
-      status: 'success',
-      data: {
-        playlistId: id,
-        activities: activities
-      }
-    });
+      response.header('X-Data-Source', 'cache');
 
-    return response;
+      return response;
+    } catch {
+      const activities = await this._playlistsService.getActivities(id);
+
+      await this._cacheService.set(`activity:${id}`, JSON.stringify(activities));
+
+      const response = h.response({
+        status: 'success',
+        data: {
+          playlistId: id,
+          activities: activities
+        }
+      });
+
+      return response;
+
+    }
+
   }
 }
 

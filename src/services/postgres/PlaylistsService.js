@@ -7,9 +7,10 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 
 class PlaylistsService{
-  constructor(collaborationService){
+  constructor(collaborationService, cacheService){
     this._pool = new Pool();
     this._collaborationService = collaborationService;
+    this._cacheService = cacheService;
   }
 
   async addPlaylist({ name, owner }){
@@ -85,6 +86,7 @@ class PlaylistsService{
     await this._pool.query(query);
 
     this.recordActivities({ playlistId, userId, songId, action: 'add' });
+    await this._cacheService.delete(`activity:${playlistId}`);
   }
 
 
@@ -143,7 +145,8 @@ class PlaylistsService{
       throw new NotFoundError('Lagu dalam playlist gagal dihapus');
     }
 
-    this.recordActivities({ playlistId, userId, songId, action: 'delete' });
+    await this.recordActivities({ playlistId, userId, songId, action: 'delete' });
+    await this._cacheService.delete(`activity:${playlistId}`);
   }
 
   async recordActivities({ playlistId, userId, songId, action }){
