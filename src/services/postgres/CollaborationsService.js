@@ -4,8 +4,9 @@ const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError.js');
 
 class CollaborationsService{
-  constructor(){
+  constructor(cacheService){
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   //already assume caller are authenticated as owner
@@ -46,6 +47,11 @@ class CollaborationsService{
     };
 
     const result = await this._pool.query(query);
+    await this._cacheService.delete(`playlist-user:${userId}`);
+    await this._cacheService.delete(`playlist-id:userId->${userId}:playlistId->${playlistId}`);
+
+
+
 
     if (!result.rowCount){
       throw new InvariantError('Kolaborasi gagal dihapus');

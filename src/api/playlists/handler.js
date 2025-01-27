@@ -12,6 +12,8 @@ class PlaylistsHandler{
     const { name } = request.payload;
 
     const playlistId = await this._playlistsService.addPlaylist({ name, owner: credentialId });
+    await this._cacheService.delete(`playlist-user:${credentialId}`);
+
 
     const response = h.response({
       status: 'success',
@@ -25,15 +27,31 @@ class PlaylistsHandler{
   }
   async getPlaylistsHandler(request, h){
     const { id: credentialId } = request.auth.credentials;
-    const playlist = await this._playlistsService.getPlaylists(credentialId);
+    try {
+      const playlist = JSON.parse(await this._cacheService.get(`playlist-user:${credentialId}`));
+      const response = h.response({
+        status: 'success',
+        data: { playlists: playlist }
+      });
+      response.code(200);
+      response.header('X-Data-Source', 'cache');
 
-    const response = h.response({
-      status: 'success',
-      data: { playlists: playlist }
-    });
-    response.code(200);
 
-    return response;
+      return response;
+
+    } catch {
+      const playlist = await this._playlistsService.getPlaylists(credentialId);
+      await this._cacheService.set(`playlist-user:${credentialId}`, JSON.stringify(playlist));
+
+      const response = h.response({
+        status: 'success',
+        data: { playlists: playlist }
+      });
+      response.code(200);
+
+      return response;
+
+    }
   }
 
   async deletePlaylistByIdHandler(request, h){
@@ -47,6 +65,10 @@ class PlaylistsHandler{
       status: 'success',
       message: 'Playlist berhasil dihapus'
     });
+    await this._cacheService.delete(`playlist-user:${credentialId}`);
+    await this._cacheService.delete(`playlist-id:userId->${credentialId}:playlistId->${playlistId}`);
+
+
     return response;
   }
 
@@ -69,6 +91,7 @@ class PlaylistsHandler{
     });
 
     response.code(201);
+    await this._cacheService.delete(`playlist-id:userId->${credentialId}:playlistId->${playlistId}`);
 
     return response;
   }
@@ -80,24 +103,48 @@ class PlaylistsHandler{
     const { id: playlistId } = request.params;
 
     await this._playlistsService.verifyPlaylistAccess(credentialId, playlistId);
-    const playlist = await this._playlistsService.getPlaylistsById({ playlistId });
-    const songs = await this._playlistsService.getPlaylistSong({ playlistId });
 
-    const response = h.response({
-      status: 'success',
-      data: {
-        playlist: {
-          id: playlist.id,
-          name: playlist.name,
-          username: playlist.username,
-          songs: songs
+    try {
+      const { playlist, songs } = JSON.parse(await this._cacheService.get(`playlist-id:userId->${credentialId}:playlistId->${playlistId}`));
+      const response = h.response({
+        status: 'success',
+        data: {
+          playlist: {
+            id: playlist.id,
+            name: playlist.name,
+            username: playlist.username,
+            songs: songs
+          }
         }
-      }
-    });
+      });
 
-    response.code(200);
+      response.code(200);
+      response.header('X-Data-Source', 'cache');
+      return response;
 
-    return response;
+    }
+    catch {
+      const playlist = await this._playlistsService.getPlaylistsById({ playlistId });
+      const songs = await this._playlistsService.getPlaylistSong({ playlistId });
+
+      const response = h.response({
+        status: 'success',
+        data: {
+          playlist: {
+            id: playlist.id,
+            name: playlist.name,
+            username: playlist.username,
+            songs: songs
+          }
+        }
+      });
+
+      response.code(200);
+      await this._cacheService.set(`playlist-id:userId->${credentialId}:playlistId->${playlistId}`, JSON.stringify({ playlist, songs }));
+
+      return response;
+
+    }
   }
 
   async deleteSongInPlaylistHandler(request, h){
@@ -114,6 +161,8 @@ class PlaylistsHandler{
       status: 'success',
       message: 'Lagu berhasil dihapus dari playlist'
     });
+    await this._cacheService.delete(`playlist-id:userId->${credentialId}:playlistId->${playlistId}`);
+
 
     return response;
   }
