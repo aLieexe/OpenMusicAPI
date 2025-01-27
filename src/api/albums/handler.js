@@ -39,7 +39,7 @@ class AlbumsHandler{
 
     } catch {
       const album = await this._albumsService.getAlbumById({ id });
-      await this._cacheService.set(`album-${id}`, JSON.stringify(album));
+      await this._cacheService.set(`album:${id}`, JSON.stringify(album));
       return {
         status: 'success',
         data: {
@@ -69,6 +69,10 @@ class AlbumsHandler{
     const { id } = request.params;
     await this._cacheService.delete(`album:${id}`);
 
+    const songsId = await this._albumsService.getSongsByAlbumsId(id);
+    for (const songId in songsId){
+      await this._cacheService.delete(`songs:${songId}`);
+    }
 
     await this._albumsService.deleteAlbumById({ id });
     return {

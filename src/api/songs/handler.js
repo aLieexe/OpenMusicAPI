@@ -16,39 +16,21 @@ class SongsHandler{
       data: { songId }
     });
     response.code(201);
-
     await this._cacheService.delete(`songs:${songId}`);
-    await this._cacheService.delete(`songs${title}${performer}`);
     return response;
   }
 
-  async getSongsHandler(request, h){
+  async getSongsHandler(request){
     const { title, performer } = request.query;
 
-    try {
-      const songs =  JSON.parse(await this._cacheService.get(`songs${title}${performer}`));
-      const response = h.response({
-        status: 'success',
-        data: {
-          songs
-        }
-      });
-      response.header('X-Data-Source', 'cache');
-      response.code(200);
+    const songs = await this._songsService.getSongs({ title, performer });
+    return {
+      status: 'success',
+      data: {
+        songs,
+      },
+    };
 
-      return response;
-
-    } catch {
-      const songs = await this._songsService.getSongs({ title, performer });
-      await this._cacheService.set(`songs${title}${performer}`, JSON.stringify(songs));
-      return {
-        status: 'success',
-        data: {
-          songs,
-        },
-      };
-
-    }
   }
 
   async getSongByIdHandler(request, h){
@@ -65,11 +47,13 @@ class SongsHandler{
       response.header('X-Data-Source', 'cache');
       response.code(200);
 
+
       return response;
 
 
     } catch {
       const song = await this._songsService.getSongById({ id });
+      await this._cacheService.set(`songs:${id}`, JSON.stringify(song));
 
       return {
         status: 'success',
@@ -89,7 +73,6 @@ class SongsHandler{
 
     await this._songsService.editSongById({ id, title, year, genre, performer, duration, albumId });
     await this._cacheService.delete(`songs:${id}`);
-    await this._cacheService.delete(`songs${title}${performer}`);
 
 
     return {
@@ -101,9 +84,8 @@ class SongsHandler{
   async deleteSongByIdHandler(request){
     const { id } = request.params;
 
-    const { title, performer } = await this._songsService.deleteSongById({ id });
+    await this._songsService.deleteSongById({ id });
     await this._cacheService.delete(`songs:${id}`);
-    await this._cacheService.delete(`songs${title}${performer}`);
 
 
     return {

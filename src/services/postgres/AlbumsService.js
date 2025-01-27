@@ -110,6 +110,16 @@ class AlbumsService {
       throw new NotFoundError('Cover gagal ditambahkan. album tidak ditemukan');
     }
   }
+
+  async getSongsByAlbumsId(albumId){
+    const query = {
+      text: 'SELECT id from songs s where s."albumId" = $1',
+      values: [albumId]
+    };
+
+    return await this._pool.query(query);
+  }
+
 }
 
 module.exports = AlbumsService;
