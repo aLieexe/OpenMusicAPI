@@ -4,3 +4,4 @@ open-music-api.session.sql
 report.html
 
 src/api/uploads/file
+.env
